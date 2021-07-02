@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>模仿Vue实现数据驱动</title>
+</head>
+<body>
+    <!-- 模板 -->
+    <div id="root">
+       <p>{{name.firstName}}</p>
+    </div>
+    <script>
+        // 使用'xx.xxx'可以访问某个对象
+        function getValueByPath(obj,path) {
+            let paths = path.split('.');//[xxx,yyy,zzz];
+            //先取得obj.xxx，再取得结果中的yyy 再取结果中的zzz
+            // let res = null;
+            // res = obj[paths[0]];
+            // res = res[path[1]];
+            let res = obj;
+            let prop;
+            while(prop = paths.shift()) {
+                console.log('----res---',res);
+                res = res[prop];
+            }
+            console.log('----res------',res);
+            return res;
+        }
+        let rlimit = /\{\{(.+?)\}\}/g;
+        function compiler(template,data) {
+            // 判断template属于什么类型 这里的template是DOM元素 在真正的Vue源码中是字符串
+            //DOM元素转为--->字符串模板--->虚拟DOM--->真正的DOM
+            let childNodes = template.childNodes;
+            //循环DOM的子元素
+            for(let i = 0;i<childNodes.length;i++) {
+                // 判断子元素是不是文本节点
+                let type = childNodes[i].nodeType;//描述节点类型 1-元素  3-文本节点
+                if(type === 3) {
+                    // 文本节点,可以判断是否有{{}}插值
+                    let text = childNodes[i].nodeValue;//存储的文本，只有文本节点才有nodeValue
+                    //有没有{{}}???正则判断
+                   text = text.replace(rlimit,function(_,g) {
+                        //使用正则匹配一次，函数会被调用一次
+                        //函数的第0个参数表示匹配到的参数
+                        //函数的第 n 个参数表示正则中的第n组
+                       let path = g.trim();//g是写在{{}}里面的东西
+                    //    let value = data [key];
+                    let value = getValueByPath(data,path);
+                       //将{{xxx}}用value替换
+                       console.log(value);
+                       return value;
+                    });
+                    //注意text目前和DOM没有关系，所以要处理
+                    childNodes[i].nodeValue = text;
+                }else if( type ===1 ) {
+                    //元素节点需要考虑是否选有子元素
+                    compiler(childNodes[i],data);
+                }
+            }
+        }
+        function JGVue(options) {
+            //习惯： 内部数据用_开头  只读数据使用$开头
+            this._data = options.data;
+            this._el = options.el;
+            //准备工作 模板
+            this._templateDOM = document.querySelector(this._el);
+           this._parent = this._templateDOM.parentNode;
+           //渲染工作
+           this.render()
+        }
+        // 将模板得　得到HTML加到页面中
+        JGVue.prototype.render = function () { 
+            this.compiler();
+         };
+        //  将模板与数据结合得到真正的DOM元素
+         JGVue.prototype.compiler = function(){
+            let realHTMLDOM = this._templateDOM.cloneNode(true);
+            compiler(realHTMLDOM,this._data);
+            this.updata(realHTMLDOM);
+         }
+         //将模板与数据结合得到真正的DOM元素
+         JGVue.prototype.updata = function(real) {
+            this._parent.replaceChild(real,document.querySelector('#root'));
+         };
+        //怎么使用JGVue
+        let app = new JGVue({
+            el: '#root',
+            data: {
+                name: {
+                    firstName: 'firstnamell',
+                    lastName: 'lastNamell'
+                },
+                message: 'info'
+            }
+        });
+        
+    </script>
+</body>
+</html>

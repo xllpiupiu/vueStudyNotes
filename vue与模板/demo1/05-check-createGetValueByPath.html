@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <script>
+        //函数柯里化  Vue编译模板的时候就生成了
+        function creategetValueByPath(path) {
+            let paths = path.split('.');//[xxx,yyy,zzz];
+            //先取得obj.xxx，再取得结果中的yyy 再取结果中的zzz
+            // let res = null;
+            // res = obj[paths[0]];
+            // res = res[path[1]];
+            return function getValueByPath(obj) {
+                let res = obj;
+                let prop;
+                while(prop = paths.shift()) {
+                    res = res[prop];
+                }
+                return res;
+            }
+        }
+        let getValueByPath = creategetValueByPath('a.b.c.d');
+        var o = {
+            a: {
+                b: {
+                    c: {
+                        d: {
+                            e: '正确'
+                        }
+                    }
+                }
+            }
+        }
+        let res = getValueByPath(o)
+        console.log(res);
+        let ress = getValueByPath(o)
+        console.log(ress);
+    </script>
+</body>
+</html>
