@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>虚拟DOM页面</title>
+</head>
+<body>
+    <div id="root">
+        <div class = 'c1'>
+            <div title="tt1">hello1</div>
+            <div>hello2</div>
+            <div>hello3</div>
+            <ul>
+                <li>1</li>
+                <li>2</li>
+                <li>3</li>
+            </ul>
+        </div>
+    </div>
+    <script>
+    //为什么使用虚拟DOM？提高性能 比真实DOM查找快
+    // 给虚拟DOM提高一个构造函数
+    class VNode {
+        constructor(tag,data,value,type,elm) {
+            this.tag = tag&&tag.toLowerCase();
+            this.data = data;
+            this.value = value;
+            this.type = type;
+            this.children = [];
+        }
+        appendChild( vnode ) {
+            this.children.push( vnode );
+        }
+    }
+    /*
+    *使用递归遍历DOM元素 生产虚拟DOM
+    * Vue中的源码使用的栈解构，使用栈存储父元素实现递归生成
+    */
+    function getVNode( node ) {
+        let nodeType = node.nodeType;
+        let _vnode = null;
+        if( nodeType===1 ) {
+            //元素节点
+            let nodeName = node.nodeName;
+            let attrs = node.attributes;
+            let _attrObj = {};
+            for(let  i=0;i<attrs.length;i++) {//attrs[i]属性节点(nodeType == 2)
+                _attrObj[attrs[i]] = attrs[i].nodeValue;
+            }
+            _vnode = new VNode(nodeName,_attrObj,undefined,nodeType);
+            //考虑node(真正的DOM元素)
+            let childNodes = node.childNodes;
+            for(let i= 0;i<childNodes.length;i++) {
+                _vnode.appendChild(getVNode(childNodes[i]));//递归
+
+            }
+        }else if( nodeType === 3) {
+
+            _vnode = new VNode(undefined,undefined,node.nodeValue,nodeType);
+        }
+        return _vnode;
+    }
+    let root = document.querySelector('#root');
+    let vroot = getVNode(root);
+    //将VNode转换为真正的DOM
+    function parseVNode () {
+
+    }
+    </script>
+</body>
+</html>
