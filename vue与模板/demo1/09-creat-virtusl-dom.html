@@ -8,8 +8,8 @@
 </head>
 <body>
     <div id="root">
-        <div class = 'c1'>
-            <div title="tt1">hello1</div>
+        <div class = "c1">
+            <div title="title">hello1</div>
             <div>hello2</div>
             <div>hello3</div>
             <ul>
@@ -47,7 +47,8 @@
             let attrs = node.attributes;
             let _attrObj = {};
             for(let  i=0;i<attrs.length;i++) {//attrs[i]属性节点(nodeType == 2)
-                _attrObj[attrs[i]] = attrs[i].nodeValue;
+                _attrObj[attrs[i].nodeName] = attrs[i].nodeValue;
+                // console.log(attrs[i].nodeName);
             }
             _vnode = new VNode(nodeName,_attrObj,undefined,nodeType);
             //考虑node(真正的DOM元素)
@@ -65,9 +66,34 @@
     let root = document.querySelector('#root');
     let vroot = getVNode(root);
     //将VNode转换为真正的DOM
-    function parseVNode () {
-
+    function parseVNode (vnode) {
+        //创建真实的DOM
+        let type = vnode.type;
+        let _node = null;
+        if(type===3) {
+            //文本节点
+            return document.createTextNode(vnode.value);//创建文本节点
+        }else if(type===1) {
+            _node = document.createElement(vnode.tag);
+            //属性
+            let data = vnode.data;//data键值对
+            Object.keys(data).forEach((key)=>{
+                let attrName = key;
+                let attrValue = data[key];
+                _node.setAttribute(attrName,attrValue);
+            });
+            //子元素 
+            let children = vnode.children;
+            children.forEach(subvnode=>{
+                //subnode是虚拟DOM DOM类型
+                _node.appendChild(parseVNode(subvnode));//递归转换子元素 虚拟DOM
+            });
+            return _node;
+        }
     }
+    //真正的Vue中使用递归+栈
+    let dom2 = parseVNode(vroot);
+    console.log('-----虚拟dOM 转真实DOM-----',dom2);
     </script>
 </body>
 </html>
