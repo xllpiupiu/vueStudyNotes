@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <script>
+        let data = {
+            name: '张三',
+            age: 12,
+            course: [
+                {name: '语文'},
+                {name: '数学'},
+                {
+                    name: '英语'
+                }
+            ]
+        }
+
+        function defineReactive(target,key,value,enumerable) {
+            if( typeof value === 'object' && value !=null && !Array.isArray(value)) {
+                // 递归
+                reactify(value);
+            }
+            //函数内部形成局部作用域 value就是只在函数内使用的变量(闭包)
+            Object.defineProperty(target,key,{
+                configurable: true,
+                enumerable: !!enumerable,
+                get() {
+                    console.log(`读取${key}属性`);
+                    return value;
+                },
+                set( newVal ) {
+                    console.log(`设置${key}属性`);
+                    value = newVal;
+                }
+            })
+        }
+        //将对象o响应式化
+        function reactify(o) {
+            let keys = Object.keys(o);
+            for(let i =0;i<keys.length;i++) {
+
+                let key = keys[i];//属性名
+                let value = o[key];
+                //判断属性是否为引用类型,还需要判断是否为数组类型
+                if( Array.isArray(value) ) {
+                    //数组类型
+                    for(let j=0;j<value.length;j++) {
+                        reactify(value[j]);
+                    }
+                }else {
+                    //对象或值类型
+                    defineReactive(o,key,value,true);
+                }
+            }
+        }
+        reactify(data);
+    </script>
+</body>
+</html>
